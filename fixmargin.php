@@ -130,8 +130,9 @@ if (!$user->hasRight('margins', 'liretous')) {
 
 if (!empty($setnewbuyingprice) && !empty($arrayofselected) && !empty($productid)) {
 	if ($newBuyingPrice !== '') {
+		$error=0;
 		foreach($arrayofselected as $factid) {
-			$sqlfd = "SELECT fd.rowid FROM ".$db->prefix()."facture as f";
+			$sqlfd = "SELECT fd.rowid, f.ref FROM ".$db->prefix()."facture as f";
 			$sqlfd .= " INNER JOIN " . $db->prefix(). "facturedet as fd ON fd.fk_facture = f.rowid";
 			$sqlfd .= " WHERE f.rowid = ".(int)$factid;
 			$sqlfd .= " AND fd.fk_product = ".(int)$productid;
@@ -141,15 +142,24 @@ if (!empty($setnewbuyingprice) && !empty($arrayofselected) && !empty($productid)
 					while ($objpdetupd = $db->fetch_object($resultfd)) {
 						$invoiceLine = new FactureLigne($db);
 						$invoiceLine->fetch($objpdetupd->rowid);
-						$invoiceLine->pa_ht=$newBuyingPrice;
-						$resultUpdLine = $invoiceLine->update($user);
-						if ($resultUpdLine<0) {
-							setEventMessages($invoiceLine->error, $invoiceLine->errors,'errors');
-						} else {
-							$arrayofselected= [];
-							$setnewbuyingprice='';
-							$massaction='';
+						if ($invoiceLine->pa_ht !== $newBuyingPrice) {
+							$invoiceLine->pa_ht = $newBuyingPrice;
+							$resultUpdLine = $invoiceLine->update($user);
+							if ($resultUpdLine < 0) {
+								$error ++;
+								setEventMessages($invoiceLine->error, $invoiceLine->errors, 'errors');
+							} else {
+								setEventMessage($langs->trans('FixMarginUpdated', $objpdetupd->ref, GETPOST('search_productid','alpha')));
+							}
 						}
+					}
+					if (empty($error)) {
+						$arrayofselected = [];
+						$setnewbuyingprice = '';
+						$massaction = '';
+					} else {
+						$massaction='fixmargin';
+
 					}
 				}
 			} else {
@@ -158,6 +168,7 @@ if (!empty($setnewbuyingprice) && !empty($arrayofselected) && !empty($productid)
 		}
 	} else {
 		setEventMessage($langs->trans('FixMarginPleaseSetNewPrice'),'errors');
+		$massaction='fixmargin';
 	}
 }
 
@@ -332,7 +343,7 @@ if ($productid > 0) {
 
 		$arrayofmassactions['fixmargin'] = img_picto('', '', 'class="pictofixedwidth"') . $langs->trans("FixMargin") . ' ' . $langs->trans($labelcostprice);
 
-		if (empty( $massaction)) {
+		if (empty($massaction)) {
 			$massactionbutton = $form->selectMassAction($massaction, $arrayofmassactions);
 		}
 		print '<br>';

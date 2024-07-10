@@ -26,6 +26,10 @@ FixMarginDescription= Correction des marges facture
 FixMargin=Correction
 FixMarginPleaseSetNewPrice=Merci de renseigner un nouveau prix d'achat
 
+TabFixMarginName=Correction marges
+
+FixMarginUpdated=Le prix de reviens des lignes de le facture %s pour le produit %s à été mise à jours
+
 #
 # Admin page
 #

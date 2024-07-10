@@ -178,7 +178,7 @@ class modFixMargin extends DolibarrModules
 		// Array to add new pages in new tabs
 		$this->tabs = array();
 		// Example:
-		$this->tabs[] = array('data'=>'margins:+tabfixmargin:ModuleFixMarginName:fixmargin@fixmargin:$user->hasRight("fixmargin", "fixmargin", "write"):/fixmargin/fixmargin.php');  					// To add a new tab identified by code tabname1
+		$this->tabs[] = array('data'=>'margins:+(5)tabfixmargin:TabFixMarginName:fixmargin@fixmargin:$user->hasRight("fixmargin", "fixmargin", "write"):/fixmargin/fixmargin.php');  					// To add a new tab identified by code tabname1
 		// $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@fixmargin:$user->hasRight('othermodule', 'read'):/fixmargin/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
 		// $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');                                                     										// To remove an existing tab identified by code tabname
 		//
