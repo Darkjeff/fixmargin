@@ -130,7 +130,8 @@ class modFixMargin extends DolibarrModules
 		$this->dirs = array("/fixmargin/temp");
 
 		// Config pages. Put here list of php page, stored into fixmargin/admin directory, to use to setup module.
-		$this->config_page_url = array("setup.php@fixmargin");
+		//$this->config_page_url = array("setup.php@fixmargin");
+		$this->config_page_url = array();
 
 		// Dependencies
 		// A condition to hide module
@@ -177,7 +178,7 @@ class modFixMargin extends DolibarrModules
 		// Array to add new pages in new tabs
 		$this->tabs = array();
 		// Example:
-		// $this->tabs[] = array('data'=>'objecttype:+tabname1:Title1:mylangfile@fixmargin:$user->hasRight('fixmargin', 'read'):/fixmargin/mynewtab1.php?id=__ID__');  					// To add a new tab identified by code tabname1
+		$this->tabs[] = array('data'=>'margins:+tabfixmargin:ModuleFixMarginName:fixmargin@fixmargin:$user->hasRight("fixmargin", "fixmargin", "write"):/fixmargin/fixmargin.php');  					// To add a new tab identified by code tabname1
 		// $this->tabs[] = array('data'=>'objecttype:+tabname2:SUBSTITUTION_Title2:mylangfile@fixmargin:$user->hasRight('othermodule', 'read'):/fixmargin/mynewtab2.php?id=__ID__',  	// To add another new tab identified by code tabname2. Label will be result of calling all substitution functions on 'Title2' key.
 		// $this->tabs[] = array('data'=>'objecttype:-tabname:NU:conditiontoremove');                                                     										// To remove an existing tab identified by code tabname
 		//
@@ -272,6 +273,13 @@ class modFixMargin extends DolibarrModules
 
 		// Permissions provided by this module
 		$this->rights = array();
+
+		$o = 1;
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 1); // Permission id (must not be already used)
+		$this->rights[$r][1] = 'Changer les marges factures'; // Permission label
+		$this->rights[$r][4] = 'fixmargin';
+		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->hasRight('fixmargin', 'myobject', 'read'))
+		$r++;
 		$r = 0;
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
@@ -300,21 +308,21 @@ class modFixMargin extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new menus
 		/* BEGIN MODULEBUILDER TOPMENU */
-		$this->menu[$r++] = array(
-			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'top', // This is a Top menu entry
-			'titre'=>'ModuleFixMarginName',
-			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle"'),
-			'mainmenu'=>'fixmargin',
-			'leftmenu'=>'',
-			'url'=>'/fixmargin/fixmarginindex.php',
-			'langs'=>'fixmargin@fixmargin', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>1000 + $r,
-			'enabled'=>'isModEnabled("fixmargin")', // Define condition to show or hide menu entry. Use 'isModEnabled("fixmargin")' if entry must be visible if module is enabled.
-			'perms'=>'1', // Use 'perms'=>'$user->hasRight("fixmargin", "myobject", "read")' if you want your menu with a permission rules
-			'target'=>'',
-			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
-		);
+//		$this->menu[$r++] = array(
+//			'fk_menu'=>'', // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+//			'type'=>'top', // This is a Top menu entry
+//			'titre'=>'ModuleFixMarginName',
+//			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle"'),
+//			'mainmenu'=>'fixmargin',
+//			'leftmenu'=>'',
+//			'url'=>'/fixmargin/fixmarginindex.php',
+//			'langs'=>'fixmargin@fixmargin', // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+//			'position'=>1000 + $r,
+//			'enabled'=>'isModEnabled("fixmargin")', // Define condition to show or hide menu entry. Use 'isModEnabled("fixmargin")' if entry must be visible if module is enabled.
+//			'perms'=>'1', // Use 'perms'=>'$user->hasRight("fixmargin", "myobject", "read")' if you want your menu with a permission rules
+//			'target'=>'',
+//			'user'=>2, // 0=Menu for internal users, 1=external users, 2=both
+//		);
 		/* END MODULEBUILDER TOPMENU */
 		/* BEGIN MODULEBUILDER LEFTMENU MYOBJECT */
 		/*
@@ -444,10 +452,10 @@ class modFixMargin extends DolibarrModules
 		global $conf, $langs;
 
 		//$result = $this->_load_tables('/install/mysql/', 'fixmargin');
-		$result = $this->_load_tables('/fixmargin/sql/');
-		if ($result < 0) {
-			return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
-		}
+//		$result = $this->_load_tables('/fixmargin/sql/');
+//		if ($result < 0) {
+//			return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
+//		}
 
 		// Create extrafields during init
 		//include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
@@ -464,38 +472,38 @@ class modFixMargin extends DolibarrModules
 		$sql = array();
 
 		// Document templates
-		$moduledir = dol_sanitizeFileName('fixmargin');
-		$myTmpObjects = array();
-		$myTmpObjects['MyObject'] = array('includerefgeneration'=>0, 'includedocgeneration'=>0);
-
-		foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
-			if ($myTmpObjectKey == 'MyObject') {
-				continue;
-			}
-			if ($myTmpObjectArray['includerefgeneration']) {
-				$src = DOL_DOCUMENT_ROOT.'/install/doctemplates/'.$moduledir.'/template_myobjects.odt';
-				$dirodt = DOL_DATA_ROOT.'/doctemplates/'.$moduledir;
-				$dest = $dirodt.'/template_myobjects.odt';
-
-				if (file_exists($src) && !file_exists($dest)) {
-					require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
-					dol_mkdir($dirodt);
-					$result = dol_copy($src, $dest, 0, 0);
-					if ($result < 0) {
-						$langs->load("errors");
-						$this->error = $langs->trans('ErrorFailToCopyFile', $src, $dest);
-						return 0;
-					}
-				}
-
-				$sql = array_merge($sql, array(
-					"DELETE FROM ".MAIN_DB_PREFIX."document_model WHERE nom = 'standard_".strtolower($myTmpObjectKey)."' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
-					"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('standard_".strtolower($myTmpObjectKey)."', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")",
-					"DELETE FROM ".MAIN_DB_PREFIX."document_model WHERE nom = 'generic_".strtolower($myTmpObjectKey)."_odt' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
-					"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('generic_".strtolower($myTmpObjectKey)."_odt', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")"
-				));
-			}
-		}
+//		$moduledir = dol_sanitizeFileName('fixmargin');
+//		$myTmpObjects = array();
+//		$myTmpObjects['MyObject'] = array('includerefgeneration'=>0, 'includedocgeneration'=>0);
+//
+//		foreach ($myTmpObjects as $myTmpObjectKey => $myTmpObjectArray) {
+//			if ($myTmpObjectKey == 'MyObject') {
+//				continue;
+//			}
+//			if ($myTmpObjectArray['includerefgeneration']) {
+//				$src = DOL_DOCUMENT_ROOT.'/install/doctemplates/'.$moduledir.'/template_myobjects.odt';
+//				$dirodt = DOL_DATA_ROOT.'/doctemplates/'.$moduledir;
+//				$dest = $dirodt.'/template_myobjects.odt';
+//
+//				if (file_exists($src) && !file_exists($dest)) {
+//					require_once DOL_DOCUMENT_ROOT.'/core/lib/files.lib.php';
+//					dol_mkdir($dirodt);
+//					$result = dol_copy($src, $dest, 0, 0);
+//					if ($result < 0) {
+//						$langs->load("errors");
+//						$this->error = $langs->trans('ErrorFailToCopyFile', $src, $dest);
+//						return 0;
+//					}
+//				}
+//
+//				$sql = array_merge($sql, array(
+//					"DELETE FROM ".MAIN_DB_PREFIX."document_model WHERE nom = 'standard_".strtolower($myTmpObjectKey)."' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
+//					"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('standard_".strtolower($myTmpObjectKey)."', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")",
+//					"DELETE FROM ".MAIN_DB_PREFIX."document_model WHERE nom = 'generic_".strtolower($myTmpObjectKey)."_odt' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
+//					"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('generic_".strtolower($myTmpObjectKey)."_odt', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")"
+//				));
+//			}
+//		}
 
 		return $this->_init($sql, $options);
 	}

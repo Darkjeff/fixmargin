@@ -18,9 +18,13 @@
 #
 
 # Module label 'ModuleFixMarginName'
-ModuleFixMarginName = FixMargin
+ModuleFixMarginName = Fix Margin
 # Module description 'ModuleFixMarginDesc'
-ModuleFixMarginDesc = FixMargin description
+ModuleFixMarginDesc = Correction des marges facture
+FixMarginDescription= Correction des marges facture
+
+FixMargin=Correction
+FixMarginPleaseSetNewPrice=Merci de renseigner un nouveau prix d'achat
 
 #
 # Admin page
