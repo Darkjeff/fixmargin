@@ -26,11 +26,12 @@
 
 require_once DOL_DOCUMENT_ROOT . '/mrp/class/mo.class.php';
 require_once DOL_DOCUMENT_ROOT . '/bom/class/bom.class.php';
+require_once DOL_DOCUMENT_ROOT . '/bom/class/bom.class.php';
 
 /**
  * Class for IrisAccounting
  */
-class FixMarginHealpers
+class FixMarginHelpers
 {
 
 	/**
@@ -174,7 +175,9 @@ class FixMarginHealpers
 							}
 						}
 						if ($line->role == 'produced') {
+
 							if ($tmpproduct->type == $tmpproduct::TYPE_PRODUCT) {
+								require_once DOL_DOCUMENT_ROOT . '/product/stock/class/mouvementstock.class.php';
 								$stockmove = new MouvementStock($this->db);
 								$restFetchStockMov = $stockmove->fetch($line->fk_stock_movement);
 								if ($restFetchStockMov < 0) {

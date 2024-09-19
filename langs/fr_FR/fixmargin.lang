@@ -33,13 +33,9 @@ FixMarginUpdated=Le prix de reviens des lignes de le facture %s pour le produit 
 #
 # Admin page
 #
-FixMarginSetup = FixMargin setup
-Settings = Settings
-FixMarginSetupPage = FixMargin setup page
-FIXMARGIN_MYPARAM1 = My param 1
-FIXMARGIN_MYPARAM1Tooltip = My param 1 tooltip
-FIXMARGIN_MYPARAM2=My param 2
-FIXMARGIN_MYPARAM2Tooltip=My param 2 tooltip
+FixMarginSetup = Paramétrage FixMargin
+FixMarginCalcMO =Recalculer les cout/prix MO
+
 
 #
 # Extrafields
@@ -47,7 +43,7 @@ FIXMARGIN_MYPARAM2Tooltip=My param 2 tooltip
 FixMarginMOTotalQtyEstimated=Qté conso total prévue
 FixMarginMOTotalQtyReal=Qté conso total réél
 FixMarginMOTotalCostEstimated=Cout total prévue
-FixMarginMOTotalCostReal=Cout total réél
+FixMarginMOTotalCostReal=Cout unitaire réél
 FixMarginMOTotalCostStock=Cout total stock
 
 #

@@ -130,8 +130,8 @@ class modFixMargin extends DolibarrModules
 		$this->dirs = array("/fixmargin/temp");
 
 		// Config pages. Put here list of php page, stored into fixmargin/admin directory, to use to setup module.
-		//$this->config_page_url = array("setup.php@fixmargin");
-		$this->config_page_url = array();
+		$this->config_page_url = array("setup.php@fixmargin");
+		//$this->config_page_url = array();
 
 		// Dependencies
 		// A condition to hide module

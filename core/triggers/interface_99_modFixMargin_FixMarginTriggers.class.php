@@ -114,7 +114,7 @@ class InterfaceFixMarginTriggers extends DolibarrTriggers
 		switch ($action) {
 //			case 'MOLINE_CREATE':
 //				dol_include_once('/fixmargin/class/fixmarginhelper.class.php');
-//				$fixMarginHelper = new FixMarginHealpers($this->db);
+//				$fixMarginHelper = new FixMarginHelpers($this->db);
 //				$resultUpdCost = $fixMarginHelper->calculateMOCost($object->fk_mo);
 //				if ($resultUpdCost<0) {
 //					$this->errors[] = $fixMarginHelper->error;
@@ -128,8 +128,6 @@ class InterfaceFixMarginTriggers extends DolibarrTriggers
 				break;
 		}
 
-
-
 		return 0;
 	}
 
@@ -139,7 +137,7 @@ class InterfaceFixMarginTriggers extends DolibarrTriggers
 	 */
 	private function calcMoCost($moId=0) {
 		dol_include_once('/fixmargin/class/fixmarginhelper.class.php');
-		$fixMarginHelper = new FixMarginHealpers($this->db);
+		$fixMarginHelper = new FixMarginHelpers($this->db);
 		$resultUpdCost = $fixMarginHelper->calculateMOCost($moId);
 		if ($resultUpdCost<0) {
 			$this->errors[] = $fixMarginHelper->error;
