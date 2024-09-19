@@ -26,7 +26,7 @@
 
 require_once DOL_DOCUMENT_ROOT . '/mrp/class/mo.class.php';
 require_once DOL_DOCUMENT_ROOT . '/bom/class/bom.class.php';
-require_once DOL_DOCUMENT_ROOT . '/bom/class/bom.class.php';
+require_once DOL_DOCUMENT_ROOT . '/core/lib/date.lib.php';
 
 /**
  * Class for IrisAccounting
@@ -67,6 +67,8 @@ class FixMarginHelpers
 
 	public function calculateMOCost($moId = 0)
 	{
+		global $langs;
+
 		if (!empty($moId)) {
 			$mo = new Mo($this->db);
 			$resultFetch = $mo->fetch($moId);
@@ -208,6 +210,16 @@ class FixMarginHelpers
 					$mo->array_options['options_qty_real_total'] = price2num($qty_real_total, 'MT');
 					$mo->array_options['options_cost_stock_total'] = price2num($cost_stock_total, 'MT');
 					$mo->array_options['options_cost_real_total'] = price2num($cost_real_total, 'MT');
+					$time_estimated='';
+					if (!empty($mo->date_start_planned) && !empty($mo->date_end_planned)) {
+						$nbdays = num_between_day($mo->date_start_planned,$mo->date_end_planned,1);
+						if ($nbdays>0) {
+							$time_estimated .= $nbdays . ' '.$langs->trans('Day').($nbdays>1?'s':'');
+						}
+					}
+
+					$mo->array_options['options_time_estimated'] = $time_estimated;
+
 					$resultUpdate = $mo->insertExtraFields();
 					if ($resultUpdate < 0) {
 						$this->error = $mo->error;

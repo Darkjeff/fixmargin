@@ -33,8 +33,8 @@ FixMarginUpdated=Le prix de reviens des lignes de le facture %s pour le produit 
 #
 # Admin page
 #
-FixMarginSetup = Paramétrage FixMargin
-FixMarginCalcMO =Recalculer les cout/prix MO
+FixMarginSetup=Paramétrage FixMargin
+FixMarginCalcMO=Recalculer les cout/prix MO
 
 
 #
@@ -45,6 +45,7 @@ FixMarginMOTotalQtyReal=Qté conso total réél
 FixMarginMOTotalCostEstimated=Cout total prévue
 FixMarginMOTotalCostReal=Cout unitaire réél
 FixMarginMOTotalCostStock=Cout total stock
+FixMarginMODiffTime=Temps de production (j.prévue)
 
 #
 # About page

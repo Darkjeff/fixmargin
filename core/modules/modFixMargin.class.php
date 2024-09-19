@@ -480,6 +480,10 @@ class modFixMargin extends DolibarrModules
 		if ($result<0) {
 			setEventMessages($extrafields->error,$extrafields->errors, 'errors');
 		}
+		$result=$extrafields->addExtraField('time_estimated', "FixMarginMODiffTime", 'varchar', 60,  255,'mrp_mo', 0,   0, '', '', 0, 0, 5, 0, 0, $conf->entity, 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
+		if ($result<0) {
+			setEventMessages($extrafields->error,$extrafields->errors, 'errors');
+		}
 
 		// Permissions
 		$this->remove($options);

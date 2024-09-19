@@ -131,7 +131,6 @@ $head = fixmarginAdminPrepareHead();
 print dol_get_fiche_head($head, 'settings', $langs->trans($page_name), -1, "fixmargin@fixmargin");
 
 // Setup page goes here
-echo '<span class="opacitymedium">' . $langs->trans("FixMarginSetupPage") . '</span><br><br>';
 
 print '<form name="migrate" action="' . $_SERVER["PHP_SELF"] . '" method="POST">';
 print '<input type="hidden" name="token" value="' . newToken() . '">';
