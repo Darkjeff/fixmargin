@@ -88,7 +88,7 @@ class modFixMargin extends DolibarrModules
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
 			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 0,
+			'triggers' => 1,
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -458,13 +458,28 @@ class modFixMargin extends DolibarrModules
 //		}
 
 		// Create extrafields during init
-		//include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
-		//$extrafields = new ExtraFields($this->db);
-		//$result1=$extrafields->addExtraField('fixmargin_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', 0, 0, '', '', 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
-		//$result2=$extrafields->addExtraField('fixmargin_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', 0, 0, '', '', 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
-		//$result3=$extrafields->addExtraField('fixmargin_myattr3', "New Attr 3 label", 'varchar', 1, 10, 'bank_account', 0, 0, '', '', 1, '', 0, 0, '', '', 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
-		//$result4=$extrafields->addExtraField('fixmargin_myattr4', "New Attr 4 label", 'select',  1,  3, 'thirdparty',   0, 1, '', array('options'=>array('code1'=>'Val1','code2'=>'Val2','code3'=>'Val3')), 1,'', 0, 0, '', '', 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
-		//$result5=$extrafields->addExtraField('fixmargin_myattr5', "New Attr 5 label", 'text',    1, 10, 'user',         0, 0, '', '', 1, '', 0, 0, '', '', 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
+		include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+		$extrafields = new ExtraFields($this->db);
+		$result=$extrafields->addExtraField('qty_estimated_total', "FixMarginMOTotalQtyEstimated", 'double', 10,  '24,3','mrp_mo', 0,   0, 0, '', 0, 0, 5, 0, 0, $conf->entity, 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
+		if ($result<0) {
+			setEventMessages($extrafields->error,$extrafields->errors, 'errors');
+		}
+		$result=$extrafields->addExtraField('qty_real_total', "FixMarginMOTotalQtyReal", 'double', 20,  '24,3','mrp_mo', 0,   0, 0, '', 0, 0, 5, 0, 0, $conf->entity, 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
+		if ($result<0) {
+			setEventMessages($extrafields->error,$extrafields->errors, 'errors');
+		}
+		$result=$extrafields->addExtraField('cost_estimated_total', "FixMarginMOTotalCostEstimated", 'price', 30,  '','mrp_mo', 0,   0, 0, '', 0, 0, 5, 0, 0, $conf->entity, 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
+		if ($result<0) {
+			setEventMessages($extrafields->error,$extrafields->errors, 'errors');
+		}
+		$result=$extrafields->addExtraField('cost_real_total', "FixMarginMOTotalCostReal", 'price', 40,  '','mrp_mo', 0,   0, 0, '', 0, 0, 5, 0, 0, $conf->entity, 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
+		if ($result<0) {
+			setEventMessages($extrafields->error,$extrafields->errors, 'errors');
+		}
+		$result=$extrafields->addExtraField('cost_stock_total', "FixMarginMOTotalCostStock", 'price', 50,  '','mrp_mo', 0,   0, 0, '', 0, 0, 5, 0, 0, $conf->entity, 'fixmargin@fixmargin', 'isModEnabled("fixmargin")');
+		if ($result<0) {
+			setEventMessages($extrafields->error,$extrafields->errors, 'errors');
+		}
 
 		// Permissions
 		$this->remove($options);

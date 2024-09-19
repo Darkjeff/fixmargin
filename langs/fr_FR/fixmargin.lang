@@ -41,6 +41,14 @@ FIXMARGIN_MYPARAM1Tooltip = My param 1 tooltip
 FIXMARGIN_MYPARAM2=My param 2
 FIXMARGIN_MYPARAM2Tooltip=My param 2 tooltip
 
+#
+# Extrafields
+#
+FixMarginMOTotalQtyEstimated=Qté conso total prévue
+FixMarginMOTotalQtyReal=Qté conso total réél
+FixMarginMOTotalCostEstimated=Cout total prévue
+FixMarginMOTotalCostReal=Cout total réél
+FixMarginMOTotalCostStock=Cout total stock
 
 #
 # About page
