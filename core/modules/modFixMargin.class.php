@@ -275,7 +275,7 @@ class modFixMargin extends DolibarrModules
 		$this->rights = array();
 
 		$r = 1;
-		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 1); // Permission id (must not be already used)
+		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($r * 10) + 1); // Permission id (must not be already used)
 		$this->rights[$r][1] = 'Changer les marges factures'; // Permission label
 		$this->rights[$r][4] = 'fixmargin';
 		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->hasRight('fixmargin', 'myobject', 'read'))
