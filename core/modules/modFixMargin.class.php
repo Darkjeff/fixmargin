@@ -274,7 +274,7 @@ class modFixMargin extends DolibarrModules
 		// Permissions provided by this module
 		$this->rights = array();
 
-		$o = 1;
+		$r = 1;
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 1); // Permission id (must not be already used)
 		$this->rights[$r][1] = 'Changer les marges factures'; // Permission label
 		$this->rights[$r][4] = 'fixmargin';
