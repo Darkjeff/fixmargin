@@ -280,6 +280,7 @@ class modFixMargin extends DolibarrModules
 		$this->rights[$r][4] = 'fixmargin';
 		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->hasRight('fixmargin', 'myobject', 'read'))
 		$r++;
+
 		$r = 0;
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
@@ -306,6 +307,21 @@ class modFixMargin extends DolibarrModules
 		// Main menu entries to add
 		$this->menu = array();
 		$r = 0;
+		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=hrm,fk_leftmenu=expensereport',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+			'type'=>'left',                          // This is a Left menu entry
+			'titre'=>'Analyse_KM',
+			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
+			'mainmenu'=>'hrm',
+			'leftmenu'=>'analysekm',
+			'url'=>'/fixmargin/analyses_km.php',
+			'langs'=>'fixmargin@fixmargin',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+			'position'=>1000+$r,
+			'enabled'=>'isModEnabled("fixmargin")', // Define condition to show or hide menu entry. Use 'isModEnabled("fixmargin")' if entry must be visible if module is enabled.
+			'perms'=>'$user->hasRight("expensereport", "read")',
+			'target'=>'',
+			'user'=>2,				                // 0=Menu for internal users, 1=external users, 2=both
+		);
 		// Add here entries to declare new menus
 		/* BEGIN MODULEBUILDER TOPMENU */
 //		$this->menu[$r++] = array(
