@@ -112,9 +112,9 @@ llxHeader("", $langs->trans("Analyse_Conso"));
 $textprevyear = '<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$type_report.'&year='.($year_current - 1).'">'.img_previous().'</a>';
 $textnextyear = '&nbsp;<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$type_report.'&year='.($year_current + 1).'">'.img_next().'</a>';
 if ($type_report==$typesReport[0]) {
-	$otherTypeReport = '<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[1].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[1]).'</a>';
+	$otherTypeReport = $langs->trans('Mode').': <a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[1].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[1]).'</a>';
 } else {
-	$otherTypeReport = '<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[0].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[0]).'</a>';
+	$otherTypeReport = $langs->trans('Mode').': <a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[0].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[0]).'</a>';
 }
 
 print load_fiche_titre($langs->trans("Analyse_Conso")." ".$textprevyear." ".$langs->trans("Year")." ".$year_start." ".$textnextyear . " ".$otherTypeReport, '', 'title_accountancy');
