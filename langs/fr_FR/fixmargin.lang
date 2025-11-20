@@ -69,4 +69,12 @@ MyWidgetDescription = My widget description
 #
 # Menu
 #
-Analyse_KM= Analyse KM
+Analyse_KM=Analyse KM
+Analyse_Conso=Analyse Conso MRP
+
+#
+# MRP
+#
+ProductDone=Produit fabriqué
+ProductUsed=Produit utilisé
+PercentLost=Pourcentage d'écart
