@@ -71,6 +71,8 @@ MyWidgetDescription = My widget description
 #
 Analyse_KM=Analyse KM
 Analyse_Conso=Analyse Conso MRP
+Analyse_Conso_qty=Analyse Conso MRP Qté
+Analyse_Conso_cost=Analyse Conso MRP Coût
 
 #
 # MRP
@@ -81,3 +83,4 @@ PercentLost=Pourcentage d'écart
 TypeReportMRP_detail=Détaillé
 TypeReportMRP_consolidated=Consolidé
 ChangeModeReport=Changer le mode vers
+PercentDiff=Ecart %%

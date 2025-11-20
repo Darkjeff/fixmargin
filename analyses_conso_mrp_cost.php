@@ -20,9 +20,9 @@
  */
 
 /**
- *    \file       fixmargin/analyses_conso_mrp.php
+ *    \file       fixmargin/analyses_conso_mrp_cost.php
  *    \ingroup    fixmargin
- *    \brief      Stat fixmargin analyse Consoemation MRP
+ *    \brief      Stat fixmargin analyse Consommation MRP
  */
 
 // Load Dolibarr environment
@@ -57,25 +57,11 @@ $object = new Mo($db);
 // Load translation files required by the page
 $langs->loadLangs(array('companies',"fixmargin@fixmargin"));
 
-$action = GETPOST('action', 'aZ09');
-$confirm = GETPOST('confirm', 'alpha');
-// Get parameters
-$limit = GETPOST('limit', 'int') ? GETPOST('limit', 'int') : $conf->liste_limit;
-$sortfield = GETPOST("sortfield", 'alpha');
-$sortorder = GETPOST("sortorder", 'alpha');
-$page = GETPOSTISSET('pageplusone') ? (GETPOST('pageplusone') - 1) : GETPOST("page", 'int');
-if (empty($page) || $page == -1) { $page = 0; }     // If $page is not defined, or '' or -1
-$offset = $limit * $page;
-$pageprev = $page - 1;
-$pagenext = $page + 1;
-if (!$sortorder) $sortorder = "ASC";
-if (!$sortfield) $sortfield = "position_name";
-
-$typesReport = [0=>'detail',1=>'consolidated'];
-$type_report = GETPOST('type_report', 'alpha');
-if (empty($type_report)) {
-	$type_report=$typesReport[0];
-}
+//$typesReport = [0=>'detail',1=>'consolidated'];
+//$type_report = GETPOST('type_report', 'alpha');
+//if (empty($type_report)) {
+//	$type_report=$typesReport[0];
+//}
 
 
 // Security check
@@ -107,61 +93,40 @@ $year_current = $year_start;
  * View
  */
 
-llxHeader("", $langs->trans("Analyse_Conso"));
+llxHeader("", $langs->trans("Analyse_Conso_cost"));
 
-$textprevyear = '<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$type_report.'&year='.($year_current - 1).'">'.img_previous().'</a>';
-$textnextyear = '&nbsp;<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$type_report.'&year='.($year_current + 1).'">'.img_next().'</a>';
-if ($type_report==$typesReport[0]) {
-	$otherTypeReport = $langs->trans('ChangeModeReport').': <a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[1].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[1]).'</a>';
-} else {
-	$otherTypeReport = $langs->trans('ChangeModeReport').': <a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[0].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[0]).'</a>';
-}
+$textprevyear = '<a href="'.$_SERVER["PHP_SELF"].'?year='.($year_current - 1).'">'.img_previous().'</a>';
+$textnextyear = '&nbsp;<a href="'.$_SERVER["PHP_SELF"].'?year='.($year_current + 1).'">'.img_next().'</a>';
 
-print load_fiche_titre($langs->trans("Analyse_Conso")." ".$textprevyear." ".$langs->trans("Year")." ".$year_start." ".$textnextyear . " ".$otherTypeReport, '', 'title_accountancy');
+print load_fiche_titre($langs->trans("Analyse_Conso_cost")." ".$textprevyear." ".$langs->trans("Year")." ".$year_start." ".$textnextyear, '', 'title_accountancy');
 
-print_barre_liste($langs->trans("Analyse_Conso"). " ". $langs->trans('TypeReportMRP_'.$type_report), '', '', '', '', '', '', -1, '', '', 0, '', '', 0, 1, 1);
+print_barre_liste($langs->trans("Analyse_Conso_cost"), '', '', '', '', '', '', -1, '', '', 0, '', '', 0, 1, 1);
 
 
 print '<div class="div-table-responsive-no-min">';
 print '<table class="noborder centpercent">';
-if ($type_report==$typesReport[0]) {
-	print '<td>' . $langs->trans('ProductDone') . '</td>';
-}
-print '<td>'.$langs->trans('ProductUsed').'</td>';
-print '<td class="right">'.$langs->trans('FixMarginMOTotalQtyEstimated').'</td>';
-print '<td class="right">'.$langs->trans('FixMarginMOTotalQtyReal').'</td>';
-print '<td class="right">'.$langs->trans('PercentLost').'</td>';
+print '<tr class="liste_titre">';
+print '<td>' . $langs->trans('ProductDone') . '</td>';
+print '<td class="right">'.$langs->trans('FixMarginMOTotalCostEstimated').'</td>';
+print '<td class="right">'.$langs->trans('FixMarginMOTotalCostStock').'</td>';
+print '<td class="right">'.$langs->trans('PercentDiff').'</td>';
+print '</tr>';
 
 
-
-$sql = "SELECT ";
-
-if ($type_report==$typesReport[0]) {
-	$sql .= " pprod.rowid as product_created_id,
-	pprod.ref as product_created,";
-}
-
-$sql .= "pused.rowid as product_used_id,
-	pused.ref as product_used,
-	SUM(toconsume.qty) as qty_planned,
-	SUM(toproduced.qty) as qty_real
+$sql = "SELECT
+	pprod.ref as product_created,
+	pprod.rowid as product_created_id,
+    SUM(moe.cost_estimated_total) as cost_planned,
+    SUM(moe.cost_stock_total) as cost_real
 FROM " . $db->prefix() . "mrp_mo as mo
 	INNER JOIN " . $db->prefix() . "mrp_mo_extrafields as moe ON mo.rowid=moe.fk_object
 	INNER JOIN " . $db->prefix() . "product as pprod ON pprod.rowid=mo.fk_product
-	INNER JOIN " . $db->prefix() . "mrp_production as toconsume ON toconsume.fk_mo=mo.rowid AND toconsume.role='toconsume'
-	INNER JOIN " . $db->prefix() . "mrp_production as toproduced ON toproduced.fk_mo=mo.rowid AND toproduced.role='consumed'
-	INNER JOIN " . $db->prefix() . "product as pused ON pused.rowid=toconsume.fk_product AND pused.rowid=toproduced.fk_product
 WHERE
 	YEAR(mo.tms)=" . (int)$year_current . "
-	AND mo.status=" . (int)$object::STATUS_PRODUCED;
+	AND mo.status=" . (int)$object::STATUS_PRODUCED."
+	GROUP BY pprod.ref
+	ORDER BY pprod.ref DESC";
 
-if ($type_report==$typesReport[0]) {
-	$sql .= " GROUP BY pprod.rowid,pused.rowid
-		ORDER BY pprod.ref,pused.ref DESC";
-} elseif ($type_report==$typesReport[1]) {
-	$sql .= " GROUP BY pused.rowid
-		ORDER BY pused.ref DESC";
-}
 
 
 $resql = $db->query($sql);
@@ -172,35 +137,24 @@ if ($resql) {
 	while ($obj = $db->fetch_object($resql)) {
 
 		print '<tr class="oddeven">';
-		if ($type_report==$typesReport[0]) {
-			print '<td class="nowrap">';
-			$product = new Product($db);
-			$product->fetch($obj->product_created_id);
-			print $product->getNomUrl(1);//$obj->product_created;
-			print '</td>';
-		}
 		print '<td class="nowrap">';
 		$product = new Product($db);
-		$product->fetch($obj->product_used_id);
-		print $product->getNomUrl(1);
-		//print $obj->product_used;
+		$product->fetch($obj->product_created_id);
+		print $product->getNomUrl(1);//$obj->product_created;
 		print '</td>';
-		print '<td class="nowrap right">'.price2num($obj->qty_planned,'MU').'</td>';
-		print '<td class="nowrap right">'.price2num($obj->qty_real,'MU').'</td>';
+		print '<td class="nowrap right">'.price2num($obj->cost_planned,'MU').'</td>';
+		print '<td class="nowrap right">'.price2num($obj->cost_real,'MU').'</td>';
 		print '<td class="nowrap right">'.
-			(!empty($obj->qty_planned)?price2num((($obj->qty_planned/$obj->qty_real)-1)*100,'MU') . ' %':'N/A')
+			(!empty($obj->cost_planned)?price2num((($obj->cost_planned/$obj->cost_real)-1)*100,'MU') . ' %':'N/A')
 			.'</td>';
 
 		print '</tr>';
 
-		$totalPlanned += (float) $obj->qty_planned;
-		$totalUsed += (float) $obj->qty_real;
+		$totalPlanned += (float) $obj->cost_planned;
+		$totalUsed += (float) $obj->cost_real;
 	}
 	if ($num>0) {
 		print '<tr class="liste_total"><td class="left">Total</td>';
-		if ($type_report==$typesReport[0]) {
-			print '<td class="nowrap"></td>';
-		}
 		print '<td class="nowrap right">'.price($totalPlanned).'</td>';
 		print '<td class="nowrap right">'.price($totalUsed).'</td>';
 		print '<td class="nowrap right">'.(!empty($totalPlanned)?price2num((($totalPlanned/$totalUsed)-1)*100,'MU'). ' %':'N/A').'</td>';
