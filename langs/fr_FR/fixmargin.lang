@@ -78,3 +78,5 @@ Analyse_Conso=Analyse Conso MRP
 ProductDone=Produit fabriqué
 ProductUsed=Produit utilisé
 PercentLost=Pourcentage d'écart
+TypeReportMRP_detail=Détaillé
+TypeReportMRP_consolidated=Consolidé

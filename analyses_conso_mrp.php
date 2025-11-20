@@ -71,6 +71,12 @@ $pagenext = $page + 1;
 if (!$sortorder) $sortorder = "ASC";
 if (!$sortfield) $sortfield = "position_name";
 
+$typesReport = [0=>'detail',1=>'consolidated'];
+$type_report = GETPOST('type_report', 'alpha');
+if (empty($type_report)) {
+	$type_report=$typesReport[0];
+}
+
 
 // Security check
 if (isset($user->socid) && $user->socid > 0) {
@@ -103,17 +109,24 @@ $year_current = $year_start;
 
 llxHeader("", $langs->trans("Analyse_Conso"));
 
-$textprevyear = '<a href="'.$_SERVER["PHP_SELF"].'?year='.($year_current - 1).'">'.img_previous().'</a>';
-$textnextyear = '&nbsp;<a href="'.$_SERVER["PHP_SELF"].'?year='.($year_current + 1).'">'.img_next().'</a>';
+$textprevyear = '<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$type_report.'&year='.($year_current - 1).'">'.img_previous().'</a>';
+$textnextyear = '&nbsp;<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$type_report.'&year='.($year_current + 1).'">'.img_next().'</a>';
+if ($type_report==$typesReport[0]) {
+	$otherTypeReport = '<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[1].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[1]).'</a>';
+} else {
+	$otherTypeReport = '<a href="'.$_SERVER["PHP_SELF"].'?type_report='.$typesReport[0].'&year='.($year_current).'">'.$langs->trans('TypeReportMRP_'.$typesReport[0]).'</a>';
+}
 
-print load_fiche_titre($langs->trans("Analyse_Conso")." ".$textprevyear." ".$langs->trans("Year")." ".$year_start." ".$textnextyear, '', 'title_accountancy');
+print load_fiche_titre($langs->trans("Analyse_Conso")." ".$textprevyear." ".$langs->trans("Year")." ".$year_start." ".$textnextyear . " ".$otherTypeReport, '', 'title_accountancy');
 
 print_barre_liste($langs->trans("Analyse_Conso"), '', '', '', '', '', '', -1, '', '', 0, '', '', 0, 1, 1);
 
 
 print '<div class="div-table-responsive-no-min">';
 print '<table class="noborder centpercent">';
-print '<td>'.$langs->trans('ProductDone').'</td>';
+if ($type_report==$typesReport[0]) {
+	print '<td>' . $langs->trans('ProductDone') . '</td>';
+}
 print '<td>'.$langs->trans('ProductUsed').'</td>';
 print '<td class="right">'.$langs->trans('FixMarginMOTotalQtyEstimated').'</td>';
 print '<td class="right">'.$langs->trans('FixMarginMOTotalQtyReal').'</td>';
@@ -121,25 +134,35 @@ print '<td class="right">'.$langs->trans('PercentLost').'</td>';
 
 
 
-$sql = "SELECT
-		pprod.rowid as product_created_id,
-		pprod.ref as product_created,
-		pused.rowid as product_used_id,
-        pused.ref as product_used,
-        SUM(toconsume.qty) as qty_planned,
-        SUM(toproduced.qty) as qty_real
-	FROM ".$db->prefix()."mrp_mo as mo
-		INNER JOIN ".$db->prefix()."mrp_mo_extrafields as moe ON mo.rowid=moe.fk_object
-		INNER JOIN ".$db->prefix()."product as pprod ON pprod.rowid=mo.fk_product
-		INNER JOIN ".$db->prefix()."mrp_production as toconsume ON toconsume.fk_mo=mo.rowid AND toconsume.role='toconsume'
-		INNER JOIN ".$db->prefix()."mrp_production as toproduced ON toproduced.fk_mo=mo.rowid AND toproduced.role='consumed'
-		INNER JOIN ".$db->prefix()."product as pused ON pused.rowid=toconsume.fk_product AND pused.rowid=toproduced.fk_product
-	WHERE
-		YEAR(mo.tms)=".(int)$year_current."
-		AND mo.status=".(int)$object::STATUS_PRODUCED."
+$sql = "SELECT ";
 
-	GROUP BY pprod.rowid,pused.rowid
-	ORDER BY pprod.ref,pused.ref DESC";
+if ($type_report==$typesReport[0]) {
+	$sql .= " pprod.rowid as product_created_id,
+	pprod.ref as product_created,";
+}
+
+$sql .= "pused.rowid as product_used_id,
+	pused.ref as product_used,
+	SUM(toconsume.qty) as qty_planned,
+	SUM(toproduced.qty) as qty_real
+FROM " . $db->prefix() . "mrp_mo as mo
+	INNER JOIN " . $db->prefix() . "mrp_mo_extrafields as moe ON mo.rowid=moe.fk_object
+	INNER JOIN " . $db->prefix() . "product as pprod ON pprod.rowid=mo.fk_product
+	INNER JOIN " . $db->prefix() . "mrp_production as toconsume ON toconsume.fk_mo=mo.rowid AND toconsume.role='toconsume'
+	INNER JOIN " . $db->prefix() . "mrp_production as toproduced ON toproduced.fk_mo=mo.rowid AND toproduced.role='consumed'
+	INNER JOIN " . $db->prefix() . "product as pused ON pused.rowid=toconsume.fk_product AND pused.rowid=toproduced.fk_product
+WHERE
+	YEAR(mo.tms)=" . (int)$year_current . "
+	AND mo.status=" . (int)$object::STATUS_PRODUCED;
+
+if ($type_report==$typesReport[0]) {
+	$sql .= " GROUP BY pprod.rowid,pused.rowid
+		ORDER BY pprod.ref,pused.ref DESC";
+} elseif ($type_report==$typesReport[1]) {
+	$sql .= " GROUP BY pused.rowid
+		ORDER BY pused.ref DESC";
+}
+
 
 $resql = $db->query($sql);
 if ($resql) {
@@ -149,21 +172,23 @@ if ($resql) {
 	while ($obj = $db->fetch_object($resql)) {
 
 		print '<tr class="oddeven">';
+		if ($type_report==$typesReport[0]) {
+			print '<td class="nowrap">';
+			$product = new Product($db);
+			$product->fetch($obj->product_created_id);
+			print $product->getNomUrl(1);//$obj->product_created;
+			print '</td>';
+		}
 		print '<td class="nowrap">';
 		$product = new Product($db);
-		$product->fetch($obj->product_created_id);
-		print $product->getNomUrl(1);//$obj->product_created;
-		print '</td>';
-		print '<td class="nowrap">';
-		$product = new Product($db);
-		$product->fetch($obj->product_created_id);
+		$product->fetch($obj->product_used_id);
 		print $product->getNomUrl(1);
 		//print $obj->product_used;
 		print '</td>';
 		print '<td class="nowrap right">'.price2num($obj->qty_planned,'MU').'</td>';
 		print '<td class="nowrap right">'.price2num($obj->qty_real,'MU').'</td>';
 		print '<td class="nowrap right">'.
-			(!empty($obj->qty_planned)?price2num((($obj->qty_real/$obj->qty_planned)-1)*100,'MU') . ' %':'N/A')
+			(!empty($obj->qty_planned)?price2num((($obj->qty_planned/$obj->qty_real)-1)*100,'MU') . ' %':'N/A')
 			.'</td>';
 
 		print '</tr>';
@@ -173,10 +198,12 @@ if ($resql) {
 	}
 	if ($num>0) {
 		print '<tr class="liste_total"><td class="left">Total</td>';
-		print '<td class="nowrap"></td>';
+		if ($type_report==$typesReport[0]) {
+			print '<td class="nowrap"></td>';
+		}
 		print '<td class="nowrap right">'.price($totalPlanned).'</td>';
 		print '<td class="nowrap right">'.price($totalUsed).'</td>';
-		print '<td class="nowrap right">'.(!empty($totalPlanned)?price2num((($totalUsed/$totalPlanned)-1)*100,'MU'). ' %':'N/A').'</td>';
+		print '<td class="nowrap right">'.(!empty($totalPlanned)?price2num((($totalPlanned/$totalUsed)-1)*100,'MU'). ' %':'N/A').'</td>';
 
 		print '</tr>';
 	}
