@@ -160,8 +160,8 @@ if ($resql) {
 		print $product->getNomUrl(1);
 		//print $obj->product_used;
 		print '</td>';
-		print '<td class="nowrap right">'.price($obj->qty_planned).'</td>';
-		print '<td class="nowrap right">'.price($obj->qty_real).'</td>';
+		print '<td class="nowrap right">'.price2num($obj->qty_planned,'MU').'</td>';
+		print '<td class="nowrap right">'.price2num($obj->qty_real,'MU').'</td>';
 		print '<td class="nowrap right">'.
 			(!empty($obj->qty_planned)?price2num((($obj->qty_real/$obj->qty_planned)-1)*100,'MU') . ' %':'N/A')
 			.'</td>';
