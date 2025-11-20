@@ -41,8 +41,8 @@ FixMarginCalcMO=Recalculer les cout/prix MO
 # Extrafields
 #
 FixMarginMOTotalQtyEstimated=Qté conso total prévue
-FixMarginMOTotalQtyReal=Qté conso total réél
-FixMarginMOTotalCostEstimated=Cout total prévue
+FixMarginMOTotalQtyReal=Qté conso total réelle
+FixMarginMOTotalCostEstimated=Cout total prévu
 FixMarginMOTotalCostReal=Cout unitaire réél
 FixMarginMOTotalCostStock=Cout total stock
 FixMarginMODiffTime=Temps de production (j.prévue)
