@@ -100,6 +100,20 @@ if ($action === 'create_of' && $user->hasRight('mrp', 'write')) {
         $result = $mo->create($user);
         if ($result > 0) {
             $mo->fetch($result);
+
+            // Si qte_reel_fut renseignée, mettre à jour la ligne toconsume avec la quantité réelle
+            if (!empty($qte_reel_fut) && $qte_reel_fut > 0) {
+                require_once DOL_DOCUMENT_ROOT.'/mrp/class/moline.class.php';
+                $mo->fetchLines();
+                foreach ($mo->lines as $moline) {
+                    if ($moline->role == 'toconsume') {
+                        $moline->qty = (float)$qte_reel_fut;
+                        $moline->update($user, 1);
+                        break;
+                    }
+                }
+            }
+
             $created_mos[] = array(
                 'id'          => $result,
                 'ref'         => $mo->ref,
