@@ -73,6 +73,46 @@ Analyse_KM=Analyse KM
 Analyse_Conso=Analyse Conso MRP
 Analyse_Conso_qty=Analyse Conso MRP Qté
 Analyse_Conso_cost=Analyse Conso MRP Coût
+Production_Masse=Production en masse
+
+#
+# Production en masse
+#
+ProductionEnMasse=Production en masse
+GroupesProduction=Groupes de production
+GroupeProduction=Groupe de production
+NouveauGroupe=Nouveau groupe de production
+AjouterDerive=Ajouter un produit dérivé
+ProduitsDerivés=Produits dérivés
+ProduitFut=Produit fût
+VolumeFut=Volume fût (L)
+VolumeUnitaire=Volume unitaire (L)
+QteMaxTheorique=Qté max théorique
+NbDerivés=Nb dérivés
+LancerProduction=Lancer la production
+CreerLesOF=Créer les OF
+RecapProductionEnMasse=Récapitulatif production en masse
+InformationsStocks=Informations stocks
+ParametresProduction=Paramètres de production
+QteAProduire=Qté à produire
+QteFutTheorique=Qté fût théorique
+QteFutReelle=Qté fût réelle
+TotalFutTheorique=Total fût théorique consommé
+TotalFutReel=Total fût réel consommé
+DepasementVolumeFut=Dépassement volume fût !
+PrixFabUnitaire=Prix fab. unitaire
+DoublonOF=OF existant
+QteVendueEstimee=Qté vendue estimée
+Totaux=Totaux
+Fut=Fût
+Produit=Produit
+ConfigurerGroupes=Configurer les groupes
+NoGroupeProduction=Aucun groupe de production configuré.
+NoDerives=Aucun dérivé
+GroupeIntrouvable=Groupe introuvable
+WarningDoublonOF=Attention : un OF ouvert existe déjà pour le produit %s (%s)
+ErreurCreationOF=Erreur lors de la création de l'OF pour %s
+ProduitsDerivesStocks=Stocks dérivés
 
 #
 # MRP

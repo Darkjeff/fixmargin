@@ -353,6 +353,21 @@ class modFixMargin extends DolibarrModules
 			'user'=>0,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
 		$this->menu[$r++]=array(
+			'fk_menu'=>'fk_mainmenu=mrp',
+			'type'=>'left',
+			'titre'=>'Production_Masse',
+			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
+			'mainmenu'=>'mrp',
+			'leftmenu'=>'productionmasse',
+			'url'=>'/fixmargin/production_masse.php',
+			'langs'=>'fixmargin@fixmargin',
+			'position'=>1000+$r,
+			'enabled'=>'isModEnabled("fixmargin")',
+			'perms'=>'$user->hasRight("mrp", "read")',
+			'target'=>'',
+			'user'=>0,
+		);
+		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=mrp,fk_leftmenu=analyseconso',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
 			'type'=>'left',                          // This is a Left menu entry
 			'titre'=>'Analyse_Conso_cost',
@@ -512,11 +527,10 @@ class modFixMargin extends DolibarrModules
 	{
 		global $conf, $langs;
 
-		//$result = $this->_load_tables('/install/mysql/', 'fixmargin');
-//		$result = $this->_load_tables('/fixmargin/sql/');
-//		if ($result < 0) {
-//			return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
-//		}
+		$result = $this->_load_tables('/custom/fixmargin/sql/');
+		if ($result < 0) {
+			return -1;
+		}
 
 		// Create extrafields during init
 		include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';

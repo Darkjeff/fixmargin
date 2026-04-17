@@ -55,6 +55,11 @@ function fixmarginAdminPrepareHead()
 	$h++;
 	*/
 
+	$head[$h][0] = dol_buildpath("/fixmargin/admin/production_groupe.php", 1);
+	$head[$h][1] = $langs->trans("GroupesProduction");
+	$head[$h][2] = 'production_groupes';
+	$h++;
+
 	$head[$h][0] = dol_buildpath("/fixmargin/admin/about.php", 1);
 	$head[$h][1] = $langs->trans("About");
 	$head[$h][2] = 'about';
