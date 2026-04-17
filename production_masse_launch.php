@@ -222,7 +222,7 @@ print '<td><b>'.dol_escape_htmltag($g->product_source_ref).'</b> <span class="op
 print ' <span class="badge badge-status1">'.$langs->trans('Fut').'</span></td>';
 print '<td class="right"><span class="badge '.$stock_class.'">'.price2num($stock_fut, 'MS').'</span></td>';
 print '<td class="right">'.price2num($g->volume_fut, 'MS').' L</td>';
-print '<td class="right">-</td>';
+print '<td class="right"><input type="text" id="qte_vendue_fut" class="flat width75 right" value="" placeholder="optionnel" oninput="calcQteReelFut()"> L</td>';
 print '</tr>';
 
 foreach ($g->derives as $d) {
@@ -292,12 +292,43 @@ print '</div>';
 print '</form>';
 
 // ── JavaScript ────────────────────────────────────────────
+$derives_js = array();
+foreach ($g->derives as $d) {
+    if (!$d->actif) continue;
+    $derives_js[] = array('id' => (int)$d->id, 'volume' => (float)$d->volume_unitaire);
+}
+$derives_js_json = json_encode($derives_js);
+$volume_fut_js   = (float)$g->volume_fut;
+
 print '<script>
+var derives = '.$derives_js_json.';
+var volumeFut = '.$volume_fut_js.';
+
 function calcTheo(derive_id, volume_unitaire) {
     var qty = parseFloat(document.getElementById("qty_" + derive_id).value) || 0;
     var theo = (qty * volume_unitaire).toFixed(2);
     document.getElementById("theo_" + derive_id).textContent = theo;
+    calcQteReelFut();
 }
+
+function calcQteReelFut() {
+    var qteVendue = parseFloat(document.getElementById("qte_vendue_fut").value) || 0;
+    if (qteVendue <= 0) return;
+    var totalReel = qteVendue * volumeFut;
+    var totalTheo = 0;
+    derives.forEach(function(d) {
+        var qty = parseFloat(document.getElementById("qty_" + d.id) ? document.getElementById("qty_" + d.id).value : 0) || 0;
+        totalTheo += qty * d.volume;
+    });
+    if (totalTheo <= 0) return;
+    derives.forEach(function(d) {
+        var qty = parseFloat(document.getElementById("qty_" + d.id) ? document.getElementById("qty_" + d.id).value : 0) || 0;
+        var reelFut = (qty * d.volume / totalTheo) * totalReel;
+        var input = document.querySelector("[name=\'qte_reel_fut_" + d.id + "\']");
+        if (input) input.value = reelFut.toFixed(2);
+    });
+}
+
 function toggleAll(cb) {
     document.querySelectorAll(".derive_check").forEach(function(el) { el.checked = cb.checked; });
 }
