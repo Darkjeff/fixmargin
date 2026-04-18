@@ -213,8 +213,26 @@ if ($id > 0 && in_array($action, array('view', 'edit_groupe', 'add_derive'))) {
     print $form->select_produits('', 'fk_product', '', 0, 0, -1, 2, '', 0, null, 0, '1', 0, 'maxwidth250');
     print '</td></tr>';
     print '<tr><td>'.$langs->trans('BOM').'</td><td>';
-    // Simple text input for BOM id (could be improved with autocomplete)
-    print '<input type="text" name="fk_bom" class="flat width75" value="" placeholder="ID BOM (optionnel)">';
+    $sql_bom  = "SELECT b.rowid, b.ref, b.label, p.ref as p_ref, p.label as p_label";
+    $sql_bom .= " FROM ".MAIN_DB_PREFIX."bom_bom as b";
+    $sql_bom .= " LEFT JOIN ".MAIN_DB_PREFIX."product as p ON p.rowid = b.fk_product";
+    $sql_bom .= " WHERE b.entity IN (".getEntity('bom').")";
+    $sql_bom .= " AND b.status = 1";
+    $sql_bom .= " ORDER BY b.ref ASC";
+    $res_bom = $db->query($sql_bom);
+    print '<select name="fk_bom" class="flat minwidth300">';
+    print '<option value="">-- '.$langs->trans('None').' --</option>';
+    if ($res_bom) {
+        while ($obj_bom = $db->fetch_object($res_bom)) {
+            $label_bom  = dol_escape_htmltag($obj_bom->ref);
+            if (!empty($obj_bom->label))   $label_bom .= ' - '.dol_escape_htmltag($obj_bom->label);
+            if (!empty($obj_bom->p_ref))   $label_bom .= ' ('.dol_escape_htmltag($obj_bom->p_ref);
+            if (!empty($obj_bom->p_label)) $label_bom .= ' '.dol_escape_htmltag($obj_bom->p_label);
+            if (!empty($obj_bom->p_ref))   $label_bom .= ')';
+            print '<option value="'.(int)$obj_bom->rowid.'">'.$label_bom.'</option>';
+        }
+    }
+    print '</select>';
     print '</td></tr>';
     print '<tr><td class="fieldrequired">'.$langs->trans('VolumeUnitaire').'</td><td>';
     print '<input type="text" name="volume_unitaire" class="flat width75 right" value=""> L';
