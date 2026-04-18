@@ -15,6 +15,8 @@ if (!$res) die("Include of main fails");
 
 require_once DOL_DOCUMENT_ROOT.'/custom/fixmargin/class/FixMarginProductionGroupe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/mrp/class/mo.class.php';
+require_once DOL_DOCUMENT_ROOT.'/mrp/class/moline.class.php';
+require_once DOL_DOCUMENT_ROOT.'/product/stock/class/mouvementstock.class.php';
 
 // Compatibility shim for Dolibarr < 14
 if (!function_exists('checkToken')) {
@@ -50,9 +52,10 @@ $created_mos = array(); // for summary
 if ($action === 'create_of' && $user->hasRight('mrp', 'write')) {
     checkToken();
 
-    $total_theo  = 0;
-    $total_reel  = 0;
-    $errors_list = array();
+    $total_theo    = 0;
+    $total_reel    = 0;
+    $errors_list   = array();
+    $auto_valider  = GETPOST('auto_valider', 'int');
 
     foreach ($g->derives as $d) {
         if (!$d->actif) continue;
@@ -84,54 +87,141 @@ if ($action === 'create_of' && $user->hasRight('mrp', 'write')) {
         $mo->mrptype            = 0; // Manufacturing
         $mo->status             = Mo::STATUS_DRAFT;
 
-        // Prix de fabrication → note_private
+        // Qté fût réelle et prix de fabrication → note_private + note_public
         $note_lines = array();
         if (!empty($qte_reel_fut)) {
             $total_reel += (float)$qte_reel_fut;
             $note_lines[] = $langs->trans('QteFutReelle').' : '.price2num($qte_reel_fut, 'MS').' L';
         }
         if (!empty($prix_fab)) {
-            $note_lines[] = $langs->trans('PrixFabUnitaire').' : '.price2num($prix_fab, 'MU');
+            $note_lines[] = $langs->trans('PrixFabUnitaire').' : '.price2num($prix_fab, 'MU').' '.$langs->trans('HT');
         }
-        if (!empty($note_lines)) $mo->note_private = implode("\n", $note_lines);
+        if (!empty($note_lines)) {
+            $mo->note_private = implode("\n", $note_lines);
+            $mo->note_public  = implode("\n", $note_lines);
+        }
 
         $total_theo += (float)$qty * (float)$d->volume_unitaire;
 
         $result = $mo->create($user);
-        if ($result > 0) {
-            $mo->fetch($result);
+        if ($result <= 0) {
+            $errors_list[] = $langs->trans('ErreurCreationOF', dol_escape_htmltag($d->product_ref)).': '.$mo->error;
+            continue;
+        }
 
-            // Si qte_reel_fut renseignée, mettre à jour la ligne toconsume avec la quantité réelle
-            if (!empty($qte_reel_fut) && $qte_reel_fut > 0) {
-                require_once DOL_DOCUMENT_ROOT.'/mrp/class/moline.class.php';
+        $mo->fetch($result);
+
+        // Stocker le prix de fab dans l'extrafield cost_estimated_total
+        if (!empty($prix_fab)) {
+            $mo->array_options['options_cost_estimated_total'] = price2num($prix_fab * $qty, 'MU');
+            $mo->insertExtraFields();
+        }
+
+        $mo_status_final = Mo::STATUS_DRAFT;
+
+        // ── Auto-validation + consommation/production ──────────────
+        if ($auto_valider && !empty($qte_reel_fut) && $qte_reel_fut > 0) {
+            $db->begin();
+            $err_auto = 0;
+
+            // 1. Valider l'OF
+            if ($mo->validate($user) <= 0) {
+                $err_auto++;
+                $errors_list[] = 'Validation OF '.$mo->ref.' : '.$mo->error;
+            }
+
+            if (!$err_auto) {
+                $mo->setStatut(Mo::STATUS_INPROGRESS, 0, '', 'MRP_MO_PRODUCED');
                 $mo->fetchLines();
+                $stockmove = new MouvementStock($db);
+                $stockmove->setOrigin($mo->element, $mo->id);
+                $labelmovement = $g->label.' - '.$d->product_ref;
+                $pos = 0;
+
+                // 2. Consommer le fût (qte_reel_fut)
                 foreach ($mo->lines as $moline) {
-                    if ($moline->role == 'toconsume') {
-                        $moline->qty = (float)$qte_reel_fut;
-                        $moline->update($user, 1);
+                    if ($moline->role !== 'toconsume') continue;
+
+                    $stockmove->context['mrp_role'] = 'toconsume';
+                    $idmove = $stockmove->livraison($user, $moline->fk_product, (int)$g->fk_warehouse, (float)$qte_reel_fut, 0, $labelmovement, dol_now());
+                    if ($idmove < 0) {
+                        $err_auto++;
+                        $errors_list[] = 'Mouvement stock conso '.$mo->ref.' : '.$stockmove->error;
+                        break;
+                    }
+
+                    $consumed = new MoLine($db);
+                    $consumed->fk_mo           = $mo->id;
+                    $consumed->position        = $pos++;
+                    $consumed->fk_product      = $moline->fk_product;
+                    $consumed->fk_warehouse    = (int)$g->fk_warehouse;
+                    $consumed->qty             = (float)$qte_reel_fut;
+                    $consumed->role            = 'consumed';
+                    $consumed->fk_mrp_production = $moline->id;
+                    $consumed->fk_stock_movement = $idmove ?: null;
+                    $consumed->fk_user_creat   = $user->id;
+                    if ($consumed->create($user) <= 0) {
+                        $err_auto++;
+                        $errors_list[] = 'Moline consumed '.$mo->ref.' : '.$consumed->error;
+                    }
+                    break; // une seule ligne toconsume (le fût)
+                }
+
+                // 3. Produire les produits finis
+                if (!$err_auto) {
+                    foreach ($mo->lines as $moline) {
+                        if ($moline->role !== 'toproduce') continue;
+
+                        $stockmove->context['mrp_role'] = 'toproduce';
+                        $idmove2 = $stockmove->reception($user, $moline->fk_product, (int)$g->fk_warehouse, (float)$qty, (float)$prix_fab, $labelmovement, '', '', '', dol_now());
+                        if ($idmove2 < 0) {
+                            $err_auto++;
+                            $errors_list[] = 'Mouvement stock prod '.$mo->ref.' : '.$stockmove->error;
+                            break;
+                        }
+
+                        $produced = new MoLine($db);
+                        $produced->fk_mo           = $mo->id;
+                        $produced->position        = $pos++;
+                        $produced->fk_product      = $moline->fk_product;
+                        $produced->fk_warehouse    = (int)$g->fk_warehouse;
+                        $produced->qty             = (float)$qty;
+                        $produced->role            = 'produced';
+                        $produced->fk_mrp_production = $moline->id;
+                        $produced->fk_stock_movement = $idmove2;
+                        $produced->fk_user_creat   = $user->id;
+                        if ($produced->create($user) <= 0) {
+                            $err_auto++;
+                            $errors_list[] = 'Moline produced '.$mo->ref.' : '.$produced->error;
+                        }
                         break;
                     }
                 }
+
+                // 4. Passer en Produit
+                if (!$err_auto) {
+                    $mo->setStatut(Mo::STATUS_PRODUCED, 0, '', 'MRP_MO_PRODUCED');
+                    $mo_status_final = Mo::STATUS_PRODUCED;
+                }
             }
 
-            $created_mos[] = array(
-                'id'          => $result,
-                'ref'         => $mo->ref,
-                'product_ref' => $d->product_ref,
-                'qty'         => $qty,
-                'qte_theo'    => price2num((float)$qty * (float)$d->volume_unitaire, 'MS'),
-                'qte_reel'    => $qte_reel_fut,
-                'prix_fab'    => $prix_fab,
-            );
-
-            // Stocker le prix de fab dans l'extrafield cost_estimated_total si renseigné
-            if (!empty($prix_fab)) {
-                $mo->array_options['options_cost_estimated_total'] = price2num($prix_fab * $qty, 'MU');
-                $mo->insertExtraFields();
+            if ($err_auto) {
+                $db->rollback();
+            } else {
+                $db->commit();
             }
-        } else {
-            $errors_list[] = $langs->trans('ErreurCreationOF', dol_escape_htmltag($d->product_ref)).': '.$mo->error;
         }
+
+        $created_mos[] = array(
+            'id'          => $result,
+            'ref'         => $mo->ref,
+            'product_ref' => $d->product_ref,
+            'qty'         => $qty,
+            'qte_theo'    => price2num((float)$qty * (float)$d->volume_unitaire, 'MS'),
+            'qte_reel'    => $qte_reel_fut,
+            'prix_fab'    => $prix_fab,
+            'status'      => $mo_status_final,
+        );
     }
 
     // Show warnings
@@ -153,6 +243,7 @@ if ($action === 'create_of' && $user->hasRight('mrp', 'write')) {
         print '<td class="right">'.$langs->trans('QteFutTheorique').'</td>';
         print '<td class="right">'.$langs->trans('QteFutReelle').'</td>';
         print '<td class="right">'.$langs->trans('PrixFabUnitaire').'</td>';
+        print '<td>'.$langs->trans('Status').'</td>';
         print '</tr>';
 
         foreach ($created_mos as $mo_info) {
@@ -164,6 +255,11 @@ if ($action === 'create_of' && $user->hasRight('mrp', 'write')) {
             print '<td class="right">'.price2num($mo_info['qte_theo'], 'MS').' L</td>';
             print '<td class="right">'.($mo_info['qte_reel'] ? price2num($mo_info['qte_reel'], 'MS').' L' : '<span class="opacitymedium">-</span>').'</td>';
             print '<td class="right">'.($mo_info['prix_fab'] ? price2num($mo_info['prix_fab'], 'MU') : '<span class="opacitymedium">-</span>').'</td>';
+            if ($mo_info['status'] == Mo::STATUS_PRODUCED) {
+                print '<td><span class="badge badge-status6">'.$langs->trans('StatusMOProduced').'</span></td>';
+            } else {
+                print '<td><span class="badge badge-status0">'.$langs->trans('Draft').'</span></td>';
+            }
             print '</tr>';
         }
         print '</table><br>';
@@ -190,6 +286,30 @@ if ($action === 'create_of' && $user->hasRight('mrp', 'write')) {
 // ─────────────────────────────────────────────────────────────
 // VIEW : Formulaire de lancement
 // ─────────────────────────────────────────────────────────────
+
+// Récupérer le dernier prix d'achat unitaire du fût (dernière facture fournisseur)
+$prix_achat_fut = 0;
+$sqlp = "SELECT fd.subprice, f.datef FROM ".MAIN_DB_PREFIX."facture_fourn_det fd"
+    ." INNER JOIN ".MAIN_DB_PREFIX."facture_fourn f ON f.rowid = fd.fk_facture_fourn"
+    ." WHERE fd.fk_product = ".(int)$g->fk_product_source
+    ." ORDER BY f.datef DESC, fd.rowid DESC"
+    ." LIMIT 1";
+$resqlp = $db->query($sqlp);
+if ($resqlp) {
+    $objp = $db->fetch_object($resqlp);
+    if ($objp && $objp->subprice > 0) $prix_achat_fut = (float)$objp->subprice;
+}
+// Fallback : prix fournisseur catalogue
+if ($prix_achat_fut <= 0) {
+    $sqlp2 = "SELECT unitprice FROM ".MAIN_DB_PREFIX."product_fournisseur_price"
+        ." WHERE fk_product = ".(int)$g->fk_product_source
+        ." ORDER BY tms DESC LIMIT 1";
+    $resqlp2 = $db->query($sqlp2);
+    if ($resqlp2) {
+        $objp2 = $db->fetch_object($resqlp2);
+        if ($objp2 && $objp2->unitprice > 0) $prix_achat_fut = (float)$objp2->unitprice;
+    }
+}
 
 // Charger les stocks pour chaque dérivé
 $stock_fut = $g->getProductStock($g->fk_product_source, (int)$g->fk_warehouse);
@@ -243,6 +363,9 @@ print '</table><br>';
 
 // ── Formulaire de saisie ──────────────────────────────────
 print '<h4>'.$langs->trans('ParametresProduction').'</h4>';
+if ($prix_achat_fut > 0) {
+    print '<div class="info">'.$langs->trans('DernierPrixAchatFut').' : <b>'.price($prix_achat_fut).' '.$langs->trans('HT').'/'.$langs->trans('Litre').'</b></div><br>';
+}
 print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'">';
 print '<input type="hidden" name="token" value="'.newToken().'">';
 print '<input type="hidden" name="action" value="create_of">';
@@ -278,14 +401,19 @@ foreach ($g->derives as $d) {
     print '</td>';
     print '<td class="right"><input type="text" name="qty_'.$d->id.'" id="qty_'.$d->id.'" class="flat width75 right" value="'.price2num($pre_qty, 'MS').'" onchange="calcTheo('.$d->id.', '.price2num($d->volume_unitaire, 'MS').')"></td>';
     print '<td class="right"><span id="theo_'.$d->id.'">'.price2num($pre_qty * $d->volume_unitaire, 'MS').'</span> L</td>';
-    print '<td class="right"><input type="text" name="qte_reel_fut_'.$d->id.'" class="flat width75 right" value="" placeholder="optionnel"> L</td>';
-    print '<td class="right"><input type="text" name="prix_fab_'.$d->id.'" class="flat width75 right" value="" placeholder="optionnel"></td>';
+    print '<td class="right"><input type="text" name="qte_reel_fut_'.$d->id.'" id="qte_reel_fut_'.$d->id.'" class="flat width75 right" value="" placeholder="optionnel" oninput="calcPrixFab()"> L</td>';
+    print '<td class="right"><input type="text" name="prix_fab_'.$d->id.'" id="prix_fab_'.$d->id.'" class="flat width75 right" value="" placeholder="optionnel"></td>';
     print '<td>'.$doublon_html.'</td>';
     print '</tr>';
 }
 
 print '</table><br>';
 print '<div class="center">';
+print '<label style="font-weight:normal;margin-right:20px">';
+print '<input type="checkbox" name="auto_valider" value="1" style="margin-right:6px">';
+print dol_escape_htmltag($langs->trans('AutoValiderEtConsommer'));
+print '</label>';
+print '<br><br>';
 print '<input type="submit" class="button button-save" value="'.$langs->trans('CreerLesOF').'">';
 print ' <a href="'.$backurl.'" class="button button-cancel">'.$langs->trans('Cancel').'</a>';
 print '</div>';
@@ -303,6 +431,7 @@ $volume_fut_js   = (float)$g->volume_fut;
 print '<script>
 var derives = '.$derives_js_json.';
 var volumeFut = '.$volume_fut_js.';
+var prixAchatFut = '.json_encode($prix_achat_fut).';
 
 function calcTheo(derive_id, volume_unitaire) {
     var qty = parseFloat(document.getElementById("qty_" + derive_id).value) || 0;
@@ -324,8 +453,24 @@ function calcQteReelFut() {
     derives.forEach(function(d) {
         var qty = parseFloat(document.getElementById("qty_" + d.id) ? document.getElementById("qty_" + d.id).value : 0) || 0;
         var reelFut = (qty * d.volume / totalTheo) * totalReel;
-        var input = document.querySelector("[name=\'qte_reel_fut_" + d.id + "\']");
+        var input = document.getElementById("qte_reel_fut_" + d.id);
         if (input) input.value = reelFut.toFixed(2);
+    });
+    calcPrixFab();
+}
+
+function calcPrixFab() {
+    if (prixAchatFut <= 0) return;
+    // prixAchatFut est le prix par litre (la qté sur la facture fournisseur est en litres)
+    derives.forEach(function(d) {
+        var qty = parseFloat(document.getElementById("qty_" + d.id) ? document.getElementById("qty_" + d.id).value : 0) || 0;
+        if (qty <= 0) return;
+        var inputReel = document.getElementById("qte_reel_fut_" + d.id);
+        var qteReel = inputReel ? (parseFloat(inputReel.value) || 0) : 0;
+        if (qteReel <= 0) return;
+        var prixFab = prixAchatFut * qteReel / qty;
+        var inputPrix = document.getElementById("prix_fab_" + d.id);
+        if (inputPrix) inputPrix.value = prixFab.toFixed(4);
     });
 }
 
