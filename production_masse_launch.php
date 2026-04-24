@@ -15,7 +15,10 @@ if (!$res) die("Include of main fails");
 
 require_once DOL_DOCUMENT_ROOT.'/custom/fixmargin/class/FixMarginProductionGroupe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/mrp/class/mo.class.php';
-require_once DOL_DOCUMENT_ROOT.'/mrp/class/moline.class.php';
+$moline_available = file_exists(DOL_DOCUMENT_ROOT.'/mrp/class/moline.class.php');
+if ($moline_available) {
+    require_once DOL_DOCUMENT_ROOT.'/mrp/class/moline.class.php';
+}
 require_once DOL_DOCUMENT_ROOT.'/product/stock/class/mouvementstock.class.php';
 
 // Compatibility shim for Dolibarr < 14
@@ -56,6 +59,8 @@ if ($action === 'create_of' && $user->hasRight('mrp', 'write')) {
     $total_reel    = 0;
     $errors_list   = array();
     $auto_valider  = GETPOST('auto_valider', 'int');
+
+    $auto_valider = ($auto_valider && $moline_available) ? 1 : 0;
 
     foreach ($g->derives as $d) {
         if (!$d->actif) continue;
@@ -409,10 +414,12 @@ foreach ($g->derives as $d) {
 
 print '</table><br>';
 print '<div class="center">';
-print '<label style="font-weight:normal;margin-right:20px">';
-print '<input type="checkbox" name="auto_valider" value="1" style="margin-right:6px">';
-print dol_escape_htmltag($langs->trans('AutoValiderEtConsommer'));
-print '</label>';
+if ($moline_available) {
+    print '<label style="font-weight:normal;margin-right:20px">';
+    print '<input type="checkbox" name="auto_valider" value="1" style="margin-right:6px">';
+    print dol_escape_htmltag($langs->trans('AutoValiderEtConsommer'));
+    print '</label>';
+}
 print '<br><br>';
 print '<input type="submit" class="button button-save" value="'.$langs->trans('CreerLesOF').'">';
 print ' <a href="'.$backurl.'" class="button button-cancel">'.$langs->trans('Cancel').'</a>';

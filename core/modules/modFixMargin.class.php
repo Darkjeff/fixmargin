@@ -338,19 +338,19 @@ class modFixMargin extends DolibarrModules
 			'user'=>0,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
 		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=mrp,fk_leftmenu=analyseconso',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Left menu entry
-			'titre'=>'Analyse_Conso_qty',
+			'fk_menu'=>'fk_mainmenu=mrp,fk_leftmenu=analyseconso',
+			'type'=>'left',
+			'titre'=>'AnalysesMRP',
 			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
 			'mainmenu'=>'mrp',
-			'leftmenu'=>'analyseconsoqty',
-			'url'=>'/fixmargin/analyses_conso_mrp_qty.php',
-			'langs'=>'fixmargin@fixmargin',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
+			'leftmenu'=>'analysesmrp',
+			'url'=>'/fixmargin/analyses_mrp.php',
+			'langs'=>'fixmargin@fixmargin',
 			'position'=>1000+$r,
-			'enabled'=>'isModEnabled("fixmargin")', // Define condition to show or hide menu entry. Use 'isModEnabled("fixmargin")' if entry must be visible if module is enabled.
+			'enabled'=>'isModEnabled("fixmargin")',
 			'perms'=>'$user->hasRight("mrp", "read")',
 			'target'=>'',
-			'user'=>0,				                // 0=Menu for internal users, 1=external users, 2=both
+			'user'=>0,
 		);
 		$this->menu[$r++]=array(
 			'fk_menu'=>'fk_mainmenu=mrp',
@@ -366,21 +366,6 @@ class modFixMargin extends DolibarrModules
 			'perms'=>'$user->hasRight("mrp", "read")',
 			'target'=>'',
 			'user'=>0,
-		);
-		$this->menu[$r++]=array(
-			'fk_menu'=>'fk_mainmenu=mrp,fk_leftmenu=analyseconso',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type'=>'left',                          // This is a Left menu entry
-			'titre'=>'Analyse_Conso_cost',
-			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
-			'mainmenu'=>'mrp',
-			'leftmenu'=>'analyseconsocost',
-			'url'=>'/fixmargin/analyses_conso_mrp_cost.php',
-			'langs'=>'fixmargin@fixmargin',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position'=>1000+$r,
-			'enabled'=>'isModEnabled("fixmargin")', // Define condition to show or hide menu entry. Use 'isModEnabled("fixmargin")' if entry must be visible if module is enabled.
-			'perms'=>'$user->hasRight("mrp", "read")',
-			'target'=>'',
-			'user'=>0,				                // 0=Menu for internal users, 1=external users, 2=both
 		);
 		// Add here entries to declare new menus
 		/* BEGIN MODULEBUILDER TOPMENU */

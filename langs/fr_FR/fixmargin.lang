@@ -74,6 +74,9 @@ Analyse_Conso=Analyse Conso MRP
 Analyse_Conso_qty=Analyse Conso MRP Qté
 Analyse_Conso_cost=Analyse Conso MRP Coût
 Production_Masse=Production en masse
+AnalysesMRP=Analyses MRP
+AnalysesMRPCosts=Coûts
+AnalysesMRPQty=Quantités
 
 #
 # Production en masse
@@ -127,3 +130,11 @@ TypeReportMRP_detail=Détaillé
 TypeReportMRP_consolidated=Consolidé
 ChangeModeReport=Changer le mode vers
 PercentDiff=Ecart %%
+
+#
+# Analyses MRP unifiées
+#
+AllMonths=Tous les mois
+ExportCSV=Exporter CSV
+FixMarginAlertThreshold=Seuil d'alerte écart MRP (%%)
+FixMarginAlertThresholdDesc=Les lignes dont l'écart planifié/réel dépasse ce seuil sont surlignées en rouge (défaut : 20)
